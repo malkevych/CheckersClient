@@ -1,0 +1,6 @@
+com\checkers\domain\vo\Step.class
+com\checkers\client\Client.class
+com\checkers\domain\vo\Position.class
+com\checkers\client\CheckersBot.class
+com\checkers\domain\vo\Check.class
+com\checkers\domain\vo\Field.class
