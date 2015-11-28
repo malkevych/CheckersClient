@@ -22,7 +22,8 @@ public class Cheek implements CheckersBot{
 
     private enum CellStatus {
         Empty,
-        Enemy
+        Enemy,
+        MyCheck
     }
 
     @Override
@@ -164,7 +165,11 @@ public class Cheek implements CheckersBot{
         for (Check check : allChecks) {
             Position checkPos = check.getPosition();
             if (checkPos.getX() == anPosition.getX() && checkPos.getY() == anPosition.getY()) {
-                return CellStatus.Enemy;
+                if (check.getColor() == whiteColor) {
+                    return CellStatus.MyCheck;
+                } else {
+                    return CellStatus.Enemy;
+                }
             }
         }
         return CellStatus.Empty;
