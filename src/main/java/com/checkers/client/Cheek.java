@@ -32,7 +32,16 @@ public class Cheek implements CheckersBot{
 
         ArrayList<Check> onlyMyChecks = getOnlyMyChecksForField(currentField);
 
+        for (Check check : currentField.getAllChecks()) {
+            if (check.getPosition().getX() == 3 && check.getPosition().getY() == 4) {
+                System.out.println("----------");
+            }
+        }
+
         for (Check myCheck : onlyMyChecks) {
+            if (myCheck.getPosition().getX() == 2 && myCheck.getPosition().getY() == 3) {
+                System.out.println("----------2");
+            }
             getAllFullWaysForCheck(myCheck, new ArrayList<>(), currentField, myCheck);
         }
 
@@ -56,7 +65,7 @@ public class Cheek implements CheckersBot{
 
     private void getAllFullWaysForCheck(
             Check myCheck, ArrayList<Position> currentWay, Field field, Check startCheck) {
-        ArrayList<Position> possibleSituations =  getPossibleSquareStepsForCheek(myCheck, myCheck.isQueen(), field);
+        ArrayList<Position> possibleSituations =  getPossibleSquareStepsForCheek(myCheck, myCheck.isQueen(), field, false);
 
         for (Position position : possibleSituations) {
             if (getCellStatus(position, field) == CellStatus.Empty) {
@@ -70,7 +79,7 @@ public class Cheek implements CheckersBot{
                 if (!isCanBeatCheck(enemyCheck, myCheck, field)) {
                     allWays.add(new Event(startCheck, new ArrayList<>(currentWay),field));
                 } else {
-                    ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(enemyCheck, true, field);
+                    ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(enemyCheck, true, field, false);
                     Position newPosition = getPositionOpositeToCheck(possibleEnemySituations, myCheck);
                     Field newField = getNewFieldWithRemovedCheck(field, enemyCheck, myCheck);
                     myCheck.setPosition(newPosition);
@@ -96,7 +105,7 @@ public class Cheek implements CheckersBot{
     }
 
     private Field getNewFieldWithRemovedCheck(Field field, Check checkEnemy, Check myCheck) {
-        ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(checkEnemy, true, field);
+        ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(checkEnemy, true, field, false);
         Position newPosition = getPositionOpositeToCheck(possibleEnemySituations, myCheck);
         //
         Field newField = CopyUtils.copyField(field);
@@ -120,7 +129,7 @@ public class Cheek implements CheckersBot{
     }
 
     // віддає всі гіпотетичні ходи для однієї шашки (крок лише на один хід)
-    private ArrayList<Position> getPossibleSquareStepsForCheek(Check check, boolean isCanGoBack, Field field) {
+    private ArrayList<Position> getPossibleSquareStepsForCheek(Check check, boolean isCanGoBack, Field field, boolean forBeating) {
         Position checkP = check.getPosition();
         ArrayList<Position> positions = new ArrayList<>();
         Position posLT = new Position(checkP.getX()-1, checkP.getY()+1);
@@ -151,12 +160,16 @@ public class Cheek implements CheckersBot{
         }
 
         ArrayList<Position> positionsRes = new ArrayList<>();
-        for (Position position:positions) {
-            if (getCheckAtPosition(position, field) == null) {
-                positionsRes.add(position);
-            }
+        if (forBeating) {
+            for (Position position:positions) {
+                if (getCheckAtPosition(position, field) == null) {
+                    positionsRes.add(position);
+                 }
+             }
+            return positionsRes;
+        } else {
+            return positions;
         }
-        return positionsRes;
     }
 
 
@@ -187,7 +200,7 @@ public class Cheek implements CheckersBot{
     }
 
     private boolean isCanBeatCheck(Check enemyCheck, Check myCheck, Field field) {
-        ArrayList<Position> possibleStepsForEnemy = getPossibleSquareStepsForCheek(enemyCheck, true, field);
+        ArrayList<Position> possibleStepsForEnemy = getPossibleSquareStepsForCheek(enemyCheck, true, field, true);
         return isHavePositionsOpositeWayForCheck(possibleStepsForEnemy, myCheck);
     }
 
