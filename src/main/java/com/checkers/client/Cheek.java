@@ -42,7 +42,7 @@ public class Cheek implements CheckersBot{
             if (myCheck.getPosition().getX() == 2 && myCheck.getPosition().getY() == 3) {
                 System.out.println("----------2");
             }
-            getAllFullWaysForCheck(myCheck, new ArrayList<>(), currentField, myCheck);
+            getAllFullWaysForCheck(CopyUtils.copyCheck(myCheck), new ArrayList<>(), currentField, myCheck);
         }
 
         int largestSize = 0;
@@ -82,12 +82,13 @@ public class Cheek implements CheckersBot{
                     ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(enemyCheck, true, field, false);
                     Position newPosition = getPositionOpositeToCheck(possibleEnemySituations, myCheck);
                     Field newField = getNewFieldWithRemovedCheck(field, enemyCheck, myCheck);
-                    myCheck.setPosition(newPosition);
-                    myCheck.setQueen(myCheck.isQueen() || isQuinePosition(newPosition));
-//                    currentWay.add(newPosition);
+                    Check newCheck = getCheckAtPosition(newPosition, newField);
+//                    myCheck.setPosition(newPosition);
+//                    myCheck.setQueen(myCheck.isQueen() || isQuinePosition(newPosition));
+                    currentWay.add(newPosition);
                     ArrayList<Position> fullPath = new ArrayList<>(currentWay);
-                    allWays.add(new Event(startCheck, fullPath,newField));
-                    getAllFullWaysForCheck(myCheck, new ArrayList<>(currentWay), newField, startCheck);
+                    allWays.add(0, new Event(startCheck, fullPath, newField));
+                    getAllFullWaysForCheck(newCheck, new ArrayList<>(currentWay), newField, startCheck);
                 }
             }
         }
@@ -111,6 +112,7 @@ public class Cheek implements CheckersBot{
         Field newField = CopyUtils.copyField(field);
         Check myCheckFromNewField = getCheckAtPosition(myCheck.getPosition(), newField);
         myCheckFromNewField.setPosition(newPosition);
+        myCheckFromNewField.setQueen(myCheck.isQueen() || isQuinePosition(newPosition));
 
         Check enemyCheckFromNewField = getCheckAtPosition(checkEnemy.getPosition(), newField);
         newField.getAllChecks().remove(enemyCheckFromNewField);
