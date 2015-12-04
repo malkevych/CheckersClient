@@ -61,7 +61,7 @@ public class Field implements Serializable {
         return str;
     }
 
-    private double evaluate() {
+    public double evaluate() {
         double rez = 0;
         int white = 7;
         int king_white = 11;

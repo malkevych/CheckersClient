@@ -67,7 +67,6 @@ public class Cheek implements CheckersBot{
         });
 
         Event largestWay = getAllSteps.get(0);
-
         Check check = largestWay.startCheck;
         Step finalStep = new Step(check, largestWay.way);
 
@@ -78,12 +77,12 @@ public class Cheek implements CheckersBot{
 
     private double getBestStepFromMySteps(Event event,  int deep, int color) {
         ArrayList<Event> getAllSteps = getAllSteps(event.field, color);
-        if (deep == 8) {
+        if (deep == 1) {
             return 0;
         }
         for (int i = 0; i < getAllSteps.size(); i++ ) {
             Event eventIndex = getAllSteps.get(i);
-            return getBestStepFromMySteps(eventIndex, deep++, getOpositeColor(color)) + eventIndex.evaluate ; // + evaluate
+            return getBestStepFromMySteps(eventIndex, deep++, getOpositeColor(color)) + eventIndex.field.evaluate(); // + evaluate
         }
         return 0;
     }
@@ -191,7 +190,7 @@ public class Cheek implements CheckersBot{
     }
 
     // віддає всі гіпотетичні ходи для однієї шашки (крок лише на один хід)
-    private ArrayList<Position> getPossibleSquareStepsForCheek(Check check, boolean isCanGoBack, Field field, boolean forBeating) {
+    private ArrayList<Position> getPossibleSquareStepsForCheek(Check check, boolean isQeen, boolean isCanForceGoBack,  Field field, boolean forBeating) {
         Position checkP = check.getPosition();
         ArrayList<Position> positions = new ArrayList<>();
         Position posLT = new Position(checkP.getX()-1, checkP.getY()+1);
@@ -212,11 +211,11 @@ public class Cheek implements CheckersBot{
             positions.remove(posRT);
             positions.remove(posRD);
         }
-        if (check.getPosition().getY() == minPosition || !isCanGoBack) {
+        if (check.getPosition().getY() == minPosition || !isQeen && check.getColor() == whiteColor) {
             positions.remove(posLD);
             positions.remove(posRD);
         }
-        if (check.getPosition().getY() == maxPosition) {
+        if (check.getPosition().getY() == maxPosition || !isQeen && check.getColor() == blackColor) {
             positions.remove(posLT);
             positions.remove(posRT);
         }
