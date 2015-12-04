@@ -13,8 +13,15 @@ public class Field implements Serializable {
 
     private Set<Check> allChecks;
 
+    private double value;
+
+    public double getValue() {
+        return value;
+    }
+
     public Field() {
         allChecks= new HashSet<Check>();
+        value = evaluate();
     }
 
     public Set<Check> getAllChecks() {
@@ -52,5 +59,26 @@ public class Field implements Serializable {
         str += "\n";
 
         return str;
+    }
+
+    private double evaluate() {
+        double rez = 0;
+        int white = 7;
+        int king_white = 11;
+        int black = 8;
+        int king_black = 12;
+        Set<Check> allChecks = this.getAllChecks();
+        for (Check check : allChecks) {
+            if (check.getColor() == 0) {//white
+                rez += white;
+                if (check.isQueen())
+                    rez += king_white - white;
+            } else {
+                rez -= black;
+                if (check.isQueen())
+                    rez -= king_black + black;
+            }
+        }
+        return rez;
     }
 }
