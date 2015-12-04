@@ -14,10 +14,17 @@ public class Event {
     public Check startCheck;
     public ArrayList<Position> way;
     public Field field;
+    public boolean isBeating;
+    public double weight;
 
-    public Event(Check startCheck, ArrayList<Position> way, Field field) {
+    public Event(Check startCheck, ArrayList<Position> way, Field field, boolean isBeating) {
         this.startCheck = startCheck;
         this.way = way;
         this.field = field;
+        this.isBeating = isBeating;
     }
+
+
+
+
 }

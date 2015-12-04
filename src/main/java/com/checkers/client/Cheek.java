@@ -6,6 +6,7 @@ import com.checkers.domain.vo.Position;
 import com.checkers.domain.vo.Step;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Set;
 
 /**
@@ -16,8 +17,7 @@ public class Cheek implements CheckersBot{
     final static int minPosition = 0;
     final static int maxPosition = 7;
     final static int whiteColor = 0;
-
-    ArrayList<Event> allWays = new ArrayList<>();
+    final static int blackColor = 1;
 
 
     private enum CellStatus {
@@ -28,77 +28,137 @@ public class Cheek implements CheckersBot{
 
     @Override
     public Step calculateNextStep(Field currentField) {
-        allWays = new ArrayList<>();
 
-        ArrayList<Check> onlyMyChecks = getOnlyMyChecksForField(currentField);
+        ArrayList<Event> getAllSteps = getAllSteps(currentField, whiteColor);
 
-        for (Check check : currentField.getAllChecks()) {
-            if (check.getPosition().getX() == 3 && check.getPosition().getY() == 4) {
-                System.out.println("----------");
-            }
+//        int largestSize = 0;
+//        Event largestWay = null;
+//        for (Event event : getAllSteps) {
+//            if (event.way.size() > largestSize) {
+//                largestSize = event.way.size();
+//                largestWay = event;
+//            }
+//        }
+//
+
+//        System.out.println("Check--------" + check.getPosition().getX() + " ++++++ " + check.getPosition().getY());
+//        System.out.println("Step---------" + finalStep.getPositionAfterMove().get(0).getX() + " --- " +  finalStep.getPositionAfterMove().get(0).getY());
+
+
+
+
+        for (int i = 0; i < getAllSteps.size(); i++ ) {
+            Event event = getAllSteps.get(i);
+            double weight = getBestStepFromMySteps(event, 0, blackColor);
+            event.weight = weight;
         }
 
-        for (Check myCheck : onlyMyChecks) {
-            if (myCheck.getPosition().getX() == 2 && myCheck.getPosition().getY() == 3) {
-                System.out.println("----------2");
-            }
-            getAllFullWaysForCheck(CopyUtils.copyCheck(myCheck), new ArrayList<>(), currentField, myCheck);
-        }
+        getAllSteps.sort(new Comparator<Event>(){
+            @Override
+            public int compare(Event s1, Event s2)
+            {
+                if (s1.weight > s2.weight) {return 1;
+                } else if (s1.weight > s2.weight) {
+                    return -1;
+                }
 
-        int largestSize = 0;
-        Event largestWay = null;
-        for (Event event : allWays) {
-            if (event.way.size() > largestSize) {
-                largestSize = event.way.size();
-                largestWay = event;
+                return 0;
             }
-        }
+        });
+
+        Event largestWay = getAllSteps.get(0);
 
         Check check = largestWay.startCheck;
         Step finalStep = new Step(check, largestWay.way);
 
-        System.out.println("Check--------" + check.getPosition().getX() + " ++++++ " + check.getPosition().getY());
-        System.out.println("Step---------" + finalStep.getPositionAfterMove().get(0).getX() + " --- " +  finalStep.getPositionAfterMove().get(0).getY());
-
         return finalStep;
     }
 
+
+
+    private double getBestStepFromMySteps(Event event,  int deep, int color) {
+        ArrayList<Event> getAllSteps = getAllSteps(event.field, color);
+        if (deep == 8) {
+            return 0;
+        }
+        for (int i = 0; i < getAllSteps.size(); i++ ) {
+            Event eventIndex = getAllSteps.get(i);
+            return getBestStepFromMySteps(eventIndex, deep++, getOpositeColor(color)) + eventIndex.evaluate ; // + evaluate
+        }
+        return 0;
+    }
+
+
+    private int getOpositeColor(int currentColor) {
+        return (currentColor == whiteColor)? blackColor : whiteColor;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private ArrayList<Event> getAllSteps(Field currentField, int myColor) {
+        ArrayList<Event> allWays = new ArrayList<>();
+        ArrayList<Check> onlyMyChecks = getOnlyMyChecksForField(currentField, myColor);
+        for (Check myCheck : onlyMyChecks) {
+            getAllFullWaysForCheck(CopyUtils.copyCheck(myCheck), new ArrayList<>(), currentField, myCheck, allWays, false, myColor);
+        }
+        return allWays;
+    }
+
+
+
     private void getAllFullWaysForCheck(
-            Check myCheck, ArrayList<Position> currentWay, Field field, Check startCheck) {
+            Check myCheck, ArrayList<Position> currentWay, Field field, Check startCheck,
+            ArrayList<Event> allWays, boolean isBeating, int myColor) {
+
         ArrayList<Position> possibleSituations =  getPossibleSquareStepsForCheek(myCheck, myCheck.isQueen(), field, false);
 
         for (Position position : possibleSituations) {
-            if (getCellStatus(position, field) == CellStatus.Empty) {
+            if (getCellStatus(position, field, myColor) == CellStatus.Empty) {
                 if(currentWay.size() > 0) continue;
                 ArrayList<Position> fullPath = new ArrayList<>(currentWay);
                 fullPath.add(position);
                 Field newField = getNewFieldAfterStep(field, myCheck, position);
-                allWays.add(new Event(startCheck, fullPath, newField));
-            } else if (getCellStatus(position, field) == CellStatus.Enemy) {
+                allWays.add(new Event(startCheck, fullPath, newField, isBeating));
+            } else if (getCellStatus(position, field, myColor) == CellStatus.Enemy) {
                 Check enemyCheck = getCheckAtPosition(position, field);
                 if (!isCanBeatCheck(enemyCheck, myCheck, field)) {
-                    allWays.add(new Event(startCheck, new ArrayList<>(currentWay),field));
+                    allWays.add(new Event(startCheck, new ArrayList<>(currentWay),field, isBeating));
                 } else {
                     ArrayList<Position> possibleEnemySituations =  getPossibleSquareStepsForCheek(enemyCheck, true, field, false);
                     Position newPosition = getPositionOpositeToCheck(possibleEnemySituations, myCheck);
                     Field newField = getNewFieldWithRemovedCheck(field, enemyCheck, myCheck);
                     Check newCheck = getCheckAtPosition(newPosition, newField);
-//                    myCheck.setPosition(newPosition);
-//                    myCheck.setQueen(myCheck.isQueen() || isQuinePosition(newPosition));
                     currentWay.add(newPosition);
                     ArrayList<Position> fullPath = new ArrayList<>(currentWay);
-                    allWays.add(0, new Event(startCheck, fullPath, newField));
-                    getAllFullWaysForCheck(newCheck, new ArrayList<>(currentWay), newField, startCheck);
+                    allWays.add(0, new Event(startCheck, fullPath, newField, isBeating));
+                    getAllFullWaysForCheck(newCheck, new ArrayList<>(currentWay), newField, startCheck, allWays, true, myColor);
                 }
             }
         }
     }
 
-    private ArrayList<Check> getOnlyMyChecksForField(Field field) {
+    private ArrayList<Check> getOnlyMyChecksForField(Field field, int myColor) {
         Set<Check> allChecks = field.getAllChecks();
         ArrayList<Check> myChecks = new ArrayList<>();
         for (Check check : allChecks) {
-            if (check.getColor() == whiteColor) {
+            if (check.getColor() == myColor) {
                 myChecks.add(check);
             }
         }
@@ -175,12 +235,12 @@ public class Cheek implements CheckersBot{
     }
 
 
-    private CellStatus getCellStatus(Position anPosition, Field field) {
+    private CellStatus getCellStatus(Position anPosition, Field field, int myColor) {
         Set<Check> allChecks = field.getAllChecks();
         for (Check check : allChecks) {
             Position checkPos = check.getPosition();
             if (checkPos.getX() == anPosition.getX() && checkPos.getY() == anPosition.getY()) {
-                if (check.getColor() == whiteColor) {
+                if (check.getColor() == myColor) {
                     return CellStatus.MyCheck;
                 } else {
                     return CellStatus.Enemy;
